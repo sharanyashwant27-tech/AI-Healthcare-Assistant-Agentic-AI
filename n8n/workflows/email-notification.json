@@ -1,0 +1,8 @@
+{
+  "name": "Email Notification",
+  "nodes": [
+    { "parameters": { "path": "email-notification", "httpMethod": "POST" }, "name": "Webhook", "type": "n8n-nodes-base.webhook", "typeVersion": 1, "position": [200, 300] },
+    { "parameters": { "fromEmail": "noreply@healthcare.local", "toEmail": "={{ $json.to }}", "subject": "={{ $json.subject }}", "text": "={{ $json.body }}" }, "name": "Send Email", "type": "n8n-nodes-base.emailSend", "typeVersion": 1, "position": [480, 300] }
+  ],
+  "connections": { "Webhook": { "main": [[{ "node": "Send Email", "type": "main", "index": 0 }]] } }
+}

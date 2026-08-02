@@ -1,0 +1,1 @@
+Medical book excerpt (sample): Migraine is a primary headache disorder characterized by recurrent moderate-to-severe headache, often with nausea or light sensitivity. Management may include lifestyle trigger review and clinician-guided acute or preventive therapy. This sample is for RAG demonstration only.

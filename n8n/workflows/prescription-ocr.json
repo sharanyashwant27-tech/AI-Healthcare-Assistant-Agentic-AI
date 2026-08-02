@@ -1,0 +1,105 @@
+{
+  "name": "Workflow 4 — Prescription",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "prescription-ocr",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "rx-upload",
+      "name": "Upload",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [140, 300],
+      "webhookId": "prescription-ocr"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": false,
+        "values": {
+          "string": [
+            { "name": "step", "value": "OCR" },
+            {
+              "name": "ocr_engine",
+              "value": "tesseract / backend OCR pipeline"
+            }
+          ],
+          "boolean": [{ "name": "ocr_started", "value": true }]
+        }
+      },
+      "id": "rx-ocr",
+      "name": "OCR",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [360, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/v1/prescription",
+        "options": { "timeout": 30000 },
+        "jsonParameters": true,
+        "bodyParametersJson": "={\n  \"text\": \"{{$json.text || $json.body?.text || ''}}\",\n  \"allergies\": \"{{$json.allergies || ''}}\",\n  \"file_path\": \"{{$json.file_path || ''}}\"\n}",
+        "headerParametersJson": "={\n  \"Authorization\": \"Bearer {{$json.access_token || ''}}\"\n}"
+      },
+      "id": "rx-ai",
+      "name": "AI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [580, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "functionCode": "const j = items[0].json;\nconst medicines = j.medicines || j.data?.medicines || [];\nreturn [{ json: { ...j, medicines, medicine_count: Array.isArray(medicines) ? medicines.length : 0, step: 'Medicine Extraction' } }];"
+      },
+      "id": "rx-extract",
+      "name": "Medicine Extraction",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [800, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const j = items[0].json;\nconst issues = j.issues || j.interactions || j.data?.issues || {};\nconst hasInteractions = !!(issues.interactions && issues.interactions.length) || !!(issues.allergy_conflicts && issues.allergy_conflicts.length);\nreturn [{ json: { ...j, interaction_check: hasInteractions ? 'warnings_found' : 'no_major_flags', interaction_issues: issues, step: 'Interaction Check' } }];"
+      },
+      "id": "rx-interact",
+      "name": "Interaction Check",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1020, 300]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": false,
+        "values": {
+          "string": [
+            { "name": "step", "value": "Patient" },
+            {
+              "name": "patient_message",
+              "value": "Prescription analysis ready. Review medicines with your clinician before changing doses."
+            }
+          ],
+          "boolean": [{ "name": "patient_notified", "value": true }]
+        }
+      },
+      "id": "rx-patient",
+      "name": "Patient",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1240, 300]
+    }
+  ],
+  "connections": {
+    "Upload": { "main": [[{ "node": "OCR", "type": "main", "index": 0 }]] },
+    "OCR": { "main": [[{ "node": "AI", "type": "main", "index": 0 }]] },
+    "AI": { "main": [[{ "node": "Medicine Extraction", "type": "main", "index": 0 }]] },
+    "Medicine Extraction": { "main": [[{ "node": "Interaction Check", "type": "main", "index": 0 }]] },
+    "Interaction Check": { "main": [[{ "node": "Patient", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "healthcare" }, { "name": "workflow-4" }]
+}

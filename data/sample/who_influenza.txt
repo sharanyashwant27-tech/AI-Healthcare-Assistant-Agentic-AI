@@ -1,0 +1,1 @@
+WHO guidance (sample): Influenza is a viral respiratory illness. Prevention includes vaccination, hand hygiene, and staying home when sick. This sample text is for RAG demonstration only and is not a substitute for official WHO publications or clinical care.

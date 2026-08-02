@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+dist/
+build/
+
+# Node / Next.js
+node_modules/
+frontend/.next/
+frontend/out/
+frontend/dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Data / uploads
+uploads/
+tmp/
+*.log
+logs/
+data/uploads/
+
+# Local env / secrets (keep .env.example)
+.env
+backend/.env
+frontend/.env.local
+*.pem
+secrets/
+.docker/
+
+# Local databases
+*.db
+*.db-wal
+*.db-shm
+ai_healthcare.db
+test_ai_healthcare.db
+
+# Cursor
+.cursor/blackboard/current.json
+.cursor/blackboard/waves/
+
+# OS
+desktop.ini

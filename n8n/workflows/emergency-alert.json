@@ -1,0 +1,115 @@
+{
+  "name": "Workflow 3 — Emergency",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "emergency-alert",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "em-symptoms",
+      "name": "Symptoms",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [140, 300],
+      "webhookId": "emergency-alert"
+    },
+    {
+      "parameters": {
+        "functionCode": "const body = items[0].json.body || items[0].json;\nconst text = ((body.symptoms || body.message || body.text || '') + '').toLowerCase();\nconst criticalKeywords = ['chest pain','shortness of breath','stroke','unconscious','severe bleeding','heart attack','can't breathe','suicidal'];\nconst hits = criticalKeywords.filter(k => text.includes(k));\nconst critical = hits.length > 0 || body.critical === true || body.emergency_type;\nreturn [{ json: { ...body, symptoms: body.symptoms || text, critical, critical_hits: hits, step: 'Critical Check' } }];"
+      },
+      "id": "em-critical",
+      "name": "Critical Check",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [360, 300]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": false,
+        "values": {
+          "string": [
+            { "name": "step", "value": "Doctor Alert" },
+            {
+              "name": "doctor_alert",
+              "value": "Critical symptoms flagged — notify on-call clinician immediately."
+            }
+          ],
+          "boolean": [{ "name": "doctor_notified", "value": true }]
+        }
+      },
+      "id": "em-doctor",
+      "name": "Doctor Alert",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [580, 300]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": false,
+        "values": {
+          "string": [
+            { "name": "step", "value": "Ambulance" },
+            {
+              "name": "ambulance_request",
+              "value": "Ambulance dispatch requested via EMS integration (confirm with local emergency services)."
+            }
+          ],
+          "boolean": [{ "name": "ambulance_requested", "value": true }]
+        }
+      },
+      "id": "em-ambulance",
+      "name": "Ambulance",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [800, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/v1/emergency",
+        "jsonParameters": true,
+        "options": { "timeout": 15000 },
+        "bodyParametersJson": "={\n  \"symptoms\": \"{{$json.symptoms}}\",\n  \"critical\": {{$json.critical === true}},\n  \"location\": \"{{$json.location || ''}}\",\n  \"patient_id\": {{$json.patient_id || 'null'}}\n}",
+        "headerParametersJson": "={\n  \"Authorization\": \"Bearer {{$json.access_token || ''}}\"\n}"
+      },
+      "id": "em-hospital",
+      "name": "Hospital",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [1020, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "keepOnlySet": false,
+        "values": {
+          "string": [
+            { "name": "step", "value": "Family Notification" },
+            {
+              "name": "family_message",
+              "value": "Emergency workflow activated. Family/emergency contacts notified on configured channels."
+            }
+          ],
+          "boolean": [{ "name": "family_notified", "value": true }]
+        }
+      },
+      "id": "em-family",
+      "name": "Family Notification",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1240, 300]
+    }
+  ],
+  "connections": {
+    "Symptoms": { "main": [[{ "node": "Critical Check", "type": "main", "index": 0 }]] },
+    "Critical Check": { "main": [[{ "node": "Doctor Alert", "type": "main", "index": 0 }]] },
+    "Doctor Alert": { "main": [[{ "node": "Ambulance", "type": "main", "index": 0 }]] },
+    "Ambulance": { "main": [[{ "node": "Hospital", "type": "main", "index": 0 }]] },
+    "Hospital": { "main": [[{ "node": "Family Notification", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "healthcare" }, { "name": "workflow-3" }, { "name": "emergency" }]
+}

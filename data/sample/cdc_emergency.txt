@@ -1,0 +1,1 @@
+CDC guidance (sample): Seek emergency care for chest pain, signs of stroke (Face drooping, Arm weakness, Speech difficulty, Time to call emergency services), severe allergic reaction, or difficulty breathing. This sample is for demonstration in the AI Healthcare Assistant RAG pipeline.

@@ -1,0 +1,101 @@
+{
+  "name": "Workflow 5 — Lab Report",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lab-report-ocr",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "lab-upload",
+      "name": "Upload",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [160, 300],
+      "webhookId": "lab-report-ocr"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": false,
+        "values": {
+          "string": [
+            { "name": "step", "value": "OCR" },
+            { "name": "ocr_engine", "value": "tesseract / backend OCR pipeline" }
+          ],
+          "boolean": [{ "name": "ocr_started", "value": true }]
+        }
+      },
+      "id": "lab-ocr",
+      "name": "OCR",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/v1/lab-report",
+        "options": { "timeout": 30000 },
+        "jsonParameters": true,
+        "bodyParametersJson": "={\n  \"text\": \"{{$json.text || $json.body?.text || ''}}\",\n  \"file_path\": \"{{$json.file_path || ''}}\"\n}",
+        "headerParametersJson": "={\n  \"Authorization\": \"Bearer {{$json.access_token || ''}}\"\n}"
+      },
+      "id": "lab-ai",
+      "name": "AI Analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [640, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "keepOnlySet": false,
+        "values": {
+          "string": [
+            { "name": "step", "value": "Doctor" },
+            {
+              "name": "doctor_alert",
+              "value": "Lab AI analysis complete — clinician review recommended for flagged values."
+            }
+          ],
+          "boolean": [{ "name": "doctor_notified", "value": true }]
+        }
+      },
+      "id": "lab-doctor",
+      "name": "Doctor",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [880, 300]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": false,
+        "values": {
+          "string": [
+            { "name": "step", "value": "Patient Summary" },
+            {
+              "name": "patient_summary",
+              "value": "={{$json.summary || 'Lab summary ready. Discuss results with your clinician — this is not a diagnosis.'}}"
+            }
+          ],
+          "boolean": [{ "name": "patient_summary_sent", "value": true }]
+        }
+      },
+      "id": "lab-patient",
+      "name": "Patient Summary",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "Upload": { "main": [[{ "node": "OCR", "type": "main", "index": 0 }]] },
+    "OCR": { "main": [[{ "node": "AI Analysis", "type": "main", "index": 0 }]] },
+    "AI Analysis": { "main": [[{ "node": "Doctor", "type": "main", "index": 0 }]] },
+    "Doctor": { "main": [[{ "node": "Patient Summary", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "healthcare" }, { "name": "workflow-5" }]
+}

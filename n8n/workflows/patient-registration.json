@@ -1,0 +1,115 @@
+{
+  "name": "Workflow 1 — Patient Registration",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "patient-registration",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "pr-form",
+      "name": "Form",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [160, 300],
+      "webhookId": "patient-registration"
+    },
+    {
+      "parameters": {
+        "functionCode": "const body = items[0].json.body || items[0].json;\nconst email = (body.email || '').toString().trim().toLowerCase();\nconst full_name = (body.full_name || body.name || '').toString().trim();\nconst phone = (body.phone || '').toString().trim();\nif (!email || !email.includes('@')) throw new Error('Validate failed: email required');\nif (!full_name) throw new Error('Validate failed: full_name required');\nreturn [{ json: { ...body, email, full_name, phone, role: body.role || 'patient', validated: true, step: 'Validate' } }];"
+      },
+      "id": "pr-validate",
+      "name": "Validate",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [380, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/v1/register",
+        "jsonParameters": true,
+        "options": { "timeout": 15000 },
+        "bodyParametersJson": "={\n  \"email\": \"{{$json.email}}\",\n  \"password\": \"{{$json.password || 'TempPass@12345'}}\",\n  \"full_name\": \"{{$json.full_name}}\",\n  \"phone\": \"{{$json.phone}}\",\n  \"role\": \"{{$json.role || 'patient'}}\"\n}"
+      },
+      "id": "pr-create",
+      "name": "Create Patient",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [600, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "keepOnlySet": false,
+        "values": {
+          "string": [
+            { "name": "step", "value": "Send Email" },
+            { "name": "email_channel", "value": "email" },
+            {
+              "name": "email_subject",
+              "value": "Welcome to AI Healthcare Assistant"
+            },
+            {
+              "name": "email_body",
+              "value": "Your patient account was created. This system does not diagnose; consult a licensed clinician for medical decisions."
+            }
+          ]
+        }
+      },
+      "id": "pr-email",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [820, 300]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": false,
+        "values": {
+          "string": [
+            { "name": "step", "value": "Send SMS" },
+            { "name": "sms_channel", "value": "sms" },
+            {
+              "name": "sms_body",
+              "value": "AI Healthcare: registration complete. Reply STOP to opt out of non-emergency SMS."
+            }
+          ]
+        }
+      },
+      "id": "pr-sms",
+      "name": "Send SMS",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1040, 300]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": false,
+        "values": {
+          "string": [
+            { "name": "step", "value": "Store Database" },
+            { "name": "status", "value": "stored" }
+          ],
+          "boolean": [{ "name": "database_persisted", "value": true }]
+        }
+      },
+      "id": "pr-store",
+      "name": "Store Database",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1260, 300]
+    }
+  ],
+  "connections": {
+    "Form": { "main": [[{ "node": "Validate", "type": "main", "index": 0 }]] },
+    "Validate": { "main": [[{ "node": "Create Patient", "type": "main", "index": 0 }]] },
+    "Create Patient": { "main": [[{ "node": "Send Email", "type": "main", "index": 0 }]] },
+    "Send Email": { "main": [[{ "node": "Send SMS", "type": "main", "index": 0 }]] },
+    "Send SMS": { "main": [[{ "node": "Store Database", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "healthcare" }, { "name": "workflow-1" }]
+}

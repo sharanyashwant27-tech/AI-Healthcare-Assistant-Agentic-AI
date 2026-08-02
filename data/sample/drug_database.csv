@@ -1,0 +1,5 @@
+name,generic_name,drug_class,common_dosage,interactions
+Paracetamol,Acetaminophen,analgesic,500mg,warfarin
+Ibuprofen,Ibuprofen,nsaid,400mg,warfarin;aspirin
+Amoxicillin,Amoxicillin,antibiotic,500mg,methotrexate
+Metformin,Metformin,antidiabetic,500mg,alcohol

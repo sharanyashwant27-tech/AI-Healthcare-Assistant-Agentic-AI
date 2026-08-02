@@ -1,0 +1,92 @@
+{
+  "name": "Workflow 2 — Appointment",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "appointment-booking",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "ap-book",
+      "name": "Book",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [160, 300],
+      "webhookId": "appointment-booking"
+    },
+    {
+      "parameters": {
+        "functionCode": "const body = items[0].json.body || items[0].json;\nconst doctor_id = body.doctor_id;\nconst scheduled_at = body.scheduled_at;\nif (!doctor_id) throw new Error('Doctor Availability: doctor_id required');\nif (!scheduled_at) throw new Error('Doctor Availability: scheduled_at required');\nconst slot = new Date(scheduled_at);\nif (Number.isNaN(slot.getTime())) throw new Error('Doctor Availability: invalid scheduled_at');\nconst hour = slot.getUTCHours();\nconst available = hour >= 8 && hour < 18;\nreturn [{ json: { ...body, doctor_id, scheduled_at, doctor_available: available, step: 'Doctor Availability' } }];"
+      },
+      "id": "ap-avail",
+      "name": "Doctor Availability",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": false,
+        "values": {
+          "string": [
+            { "name": "step", "value": "Calendar" },
+            { "name": "calendar_event", "value": "={{'Appointment with doctor ' + $json.doctor_id + ' at ' + $json.scheduled_at}}" }
+          ],
+          "boolean": [{ "name": "calendar_synced", "value": true }]
+        }
+      },
+      "id": "ap-cal",
+      "name": "Calendar",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/v1/appointment",
+        "jsonParameters": true,
+        "options": { "timeout": 15000 },
+        "bodyParametersJson": "={\n  \"doctor_id\": {{$json.doctor_id}},\n  \"scheduled_at\": \"{{$json.scheduled_at}}\",\n  \"reason\": \"{{$json.reason || 'Consultation'}}\"\n}",
+        "headerParametersJson": "={\n  \"Authorization\": \"Bearer {{$json.access_token || ''}}\"\n}"
+      },
+      "id": "ap-confirm",
+      "name": "Confirmation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [880, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "keepOnlySet": false,
+        "values": {
+          "string": [
+            { "name": "step", "value": "Reminder" },
+            {
+              "name": "reminder_message",
+              "value": "Appointment reminder scheduled. Confirm attendance with your clinic."
+            },
+            { "name": "reminder_channel", "value": "sms+push+email" }
+          ],
+          "boolean": [{ "name": "reminder_queued", "value": true }]
+        }
+      },
+      "id": "ap-remind",
+      "name": "Reminder",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "Book": { "main": [[{ "node": "Doctor Availability", "type": "main", "index": 0 }]] },
+    "Doctor Availability": { "main": [[{ "node": "Calendar", "type": "main", "index": 0 }]] },
+    "Calendar": { "main": [[{ "node": "Confirmation", "type": "main", "index": 0 }]] },
+    "Confirmation": { "main": [[{ "node": "Reminder", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "healthcare" }, { "name": "workflow-2" }]
+}

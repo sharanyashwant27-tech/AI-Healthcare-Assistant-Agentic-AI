@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f7f3ee;
+  --fg: #0b1f2a;
+  --accent: #0f6e7a;
+  --panel: rgba(255, 255, 255, 0.72);
+  --line: rgba(11, 31, 42, 0.08);
+}
+
+.dark {
+  --bg: #07141b;
+  --fg: #e8f3f5;
+  --accent: #3db8c5;
+  --panel: rgba(14, 32, 42, 0.78);
+  --line: rgba(232, 243, 245, 0.1);
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  color: var(--fg);
+  background:
+    radial-gradient(circle at 12% 18%, rgba(15, 110, 122, 0.18), transparent 34%),
+    radial-gradient(circle at 88% 8%, rgba(196, 92, 74, 0.14), transparent 28%),
+    linear-gradient(160deg, var(--bg), #eef6f7 55%, var(--bg));
+  font-family: var(--font-body), "Segoe UI", sans-serif;
+}
+
+.dark body,
+.dark {
+  background:
+    radial-gradient(circle at 15% 20%, rgba(61, 184, 197, 0.16), transparent 36%),
+    radial-gradient(circle at 85% 10%, rgba(196, 92, 74, 0.12), transparent 30%),
+    linear-gradient(160deg, #07141b, #0b1f2a 55%, #07141b);
+}
+
+.glass {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(16px);
+}
+
+.brand-mark {
+  letter-spacing: -0.04em;
+}
+
+@keyframes navprogress {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}

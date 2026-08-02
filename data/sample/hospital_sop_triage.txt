@@ -1,0 +1,1 @@
+Hospital SOP (sample): Patients presenting with chest pain or suspected stroke must be escalated to the emergency pathway immediately. Reception staff should collect vitals and notify the on-call physician. AI systems may assist documentation but never replace clinical triage judgment.
