@@ -131,6 +131,8 @@ services:
       PORT: "8911"
     ports:
       - "8911:8911"
+    volumes:
+      - ./README.md:/app/README.md:ro
     depends_on:
       - backend
 

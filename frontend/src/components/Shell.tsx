@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, type ComponentType, type MouseEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type ComponentType, type MouseEvent } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Moon, Sun, LogOut, Activity, Menu, X } from "lucide-react";
 import { PanelNavProvider } from "@/components/AppLink";
@@ -19,6 +19,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const [panelHref, setPanelHref] = useState(pathname);
   const [Panel, setPanel] = useState<ComponentType | null>(() => getCachedPanel(pathname));
   const [loadingPanel, setLoadingPanel] = useState(false);
+  const panelHrefRef = useRef(panelHref);
+  panelHrefRef.current = panelHref;
 
   useEffect(() => {
     if (!accessToken && !publicPaths.has(pathname)) {
@@ -40,11 +42,16 @@ export function Shell({ children }: { children: React.ReactNode }) {
       setLoadingPanel(false);
       return;
     }
+    let cancelled = false;
     setLoadingPanel(true);
     loadPanel(pathname).then((comp) => {
+      if (cancelled) return;
       setPanel(() => comp);
       setLoadingPanel(false);
     });
+    return () => {
+      cancelled = true;
+    };
   }, [pathname]);
 
   const showNav = Boolean(accessToken) && !publicPaths.has(pathname);
@@ -54,36 +61,37 @@ export function Shell({ children }: { children: React.ReactNode }) {
     preloadAllPanels();
   }, [showNav]);
 
-  function openPanel(href: string, e?: MouseEvent<HTMLAnchorElement>) {
-    e?.preventDefault();
-    if (!isNavHref(href)) {
-      router.push(href);
-      return;
-    }
-    if (href === panelHref && Panel && !loadingPanel) return;
+  const openPanel = useCallback(
+    (href: string, e?: MouseEvent<HTMLAnchorElement>) => {
+      e?.preventDefault();
+      setMobileOpen(false);
 
-    setMobileOpen(false);
-    setPanelHref(href);
-
-    const cached = getCachedPanel(href);
-    if (cached) {
-      setPanel(() => cached);
-      setLoadingPanel(false);
-      if (window.location.pathname !== href) {
-        window.history.pushState({ panel: href }, "", href);
+      if (!isNavHref(href)) {
+        router.push(href);
+        return;
       }
-      return;
-    }
 
-    setLoadingPanel(true);
-    loadPanel(href).then((comp) => {
-      setPanel(() => comp);
-      setLoadingPanel(false);
-      if (window.location.pathname !== href) {
-        window.history.pushState({ panel: href }, "", href);
+      // Always switch panel so admin/module cards never no-op on same-route targets.
+      setPanelHref(href);
+      panelHrefRef.current = href;
+      const cached = getCachedPanel(href);
+      if (cached) {
+        setPanel(() => cached);
+        setLoadingPanel(false);
+      } else {
+        setLoadingPanel(true);
+        loadPanel(href).then((comp) => {
+          setPanel(() => comp);
+          setLoadingPanel(false);
+        });
       }
-    });
-  }
+
+      if (typeof window !== "undefined" && window.location.pathname !== href) {
+        router.push(href);
+      }
+    },
+    [router]
+  );
 
   useEffect(() => {
     function onPopState() {
@@ -156,7 +164,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   })();
 
   return (
-    <PanelNavProvider navigate={(href) => openPanel(href)}>
+    <PanelNavProvider navigate={openPanel}>
       <div className="min-h-screen">
         <header className="sticky top-0 z-40 border-b border-[var(--line)] bg-[color:var(--panel)] backdrop-blur-xl">
           <div className="flex items-center justify-between px-4 py-3 md:px-6">

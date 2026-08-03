@@ -40,8 +40,27 @@ See full matrix in [`docs/TECH_STACK.md`](docs/TECH_STACK.md).
 | Role | Email | Password |
 |------|-------|----------|
 | Patient | patient@example.com | Patient@12345 |
-| Doctor | doctor@example.com | Doctor@12345 |
+| Doctor (Internal Medicine) | doctor@example.com | Doctor@12345 |
 | Admin | admin@example.com | Admin@12345 |
+
+Specialty doctors (password `Doctor@12345` for all):
+
+| Specialty | Email |
+|------|-------|
+| Cardiology | cardio@example.com |
+| Gastroenterology | gastro@example.com |
+| ENT | ent@example.com |
+| Neurology | neuro@example.com |
+| Orthopedics | ortho@example.com |
+| Dermatology | derma@example.com |
+| Pediatrics | pedia@example.com |
+| Pulmonology | pulmo@example.com |
+| Gynecology | gyn@example.com |
+| Ophthalmology | ophtho@example.com |
+| Psychiatry | psych@example.com |
+| Endocrinology | endo@example.com |
+| Urology | uro@example.com |
+| Dental | dental@example.com |
 
 ## Docker (recommended)
 

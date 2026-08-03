@@ -8,21 +8,23 @@ import { STAT_LINKS } from "@/lib/nav";
 import { RootState } from "@/store";
 
 const actions = [
-  { href: "/portal/admin", label: "Admin overview", task: "Refresh ops view" },
+  { href: "/dashboard", label: "Analytics dashboard", task: "Stats & charts" },
   { href: "/workflows", label: "n8n workflows", task: "Trigger pipelines" },
   { href: "/appointments", label: "Appointments", task: "Hospital schedule" },
   { href: "/notifications", label: "Notifications", task: "Ops alerts" },
-  { href: "/dashboard", label: "Analytics dashboard", task: "Stats & charts" },
   { href: "/modules", label: "All modules", task: "Module catalog" },
+  { href: "/portal/doctor", label: "Doctor portal", task: "Clinician workspace" },
+  { href: "/portal/patient", label: "Patient portal", task: "Patient workspace" },
   { href: "/emergency", label: "Emergency desk", task: "Escalation flow" },
   { href: "/telemedicine", label: "Telemedicine", task: "Virtual rooms" },
   { href: "/chat", label: "AI assistant", task: "Admin Q&A" },
   { href: "/knowledge", label: "Knowledge base", task: "Guideline RAG" },
+  { href: "/labs", label: "Lab reports", task: "Hospital labs" },
 ];
 
 function statHref(name: string): string {
   const key = name.toLowerCase().replace(/\s+/g, "_");
-  return STAT_LINKS[key]?.href || "/modules";
+  return STAT_LINKS[key]?.href || STAT_LINKS[name.toLowerCase()]?.href || "/modules";
 }
 
 export default function HospitalAdminPage() {
@@ -45,16 +47,20 @@ export default function HospitalAdminPage() {
       <div>
         <h1 className="font-display text-4xl font-semibold">Admin Portal</h1>
         <p className="mt-2 opacity-70">
-          Hospital operations — cards open modules and trigger the related admin task.
+          Hospital operations — click any card to open the related module.
         </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
         {Object.entries(dash?.stats || {}).map(([k, v]) => (
-          <AppLink key={k} href={statHref(k)} className="glass rounded-3xl p-5 transition hover:-translate-y-0.5">
+          <AppLink
+            key={k}
+            href={statHref(k)}
+            className="glass block cursor-pointer rounded-3xl p-5 transition hover:-translate-y-0.5 hover:ring-2 hover:ring-sea/40"
+          >
             <p className="text-sm uppercase opacity-60">{k}</p>
             <p className="mt-2 font-display text-3xl">{String(v)}</p>
-            <p className="mt-2 text-xs font-semibold text-sea">Open →</p>
+            <p className="mt-2 text-xs font-semibold text-sea">Open {statHref(k)} →</p>
           </AppLink>
         ))}
       </div>
@@ -64,7 +70,7 @@ export default function HospitalAdminPage() {
           <AppLink
             key={a.href + a.label}
             href={a.href}
-            className="rounded-2xl bg-sea px-4 py-3 text-white shadow-soft transition hover:-translate-y-0.5"
+            className="block cursor-pointer rounded-2xl bg-sea px-4 py-3 text-white shadow-soft transition hover:-translate-y-0.5 hover:brightness-110"
           >
             <p className="font-semibold">{a.label}</p>
             <p className="text-xs text-white/80">{a.task}</p>
@@ -85,7 +91,10 @@ export default function HospitalAdminPage() {
           <ul className="mt-3 flex flex-wrap gap-2 text-sm">
             {(dash?.ai_usage?.modules || []).map((m: string) => (
               <li key={m}>
-                <AppLink href="/modules" className="rounded-full border border-[var(--line)] px-3 py-1 hover:bg-white/40">
+                <AppLink
+                  href="/modules"
+                  className="inline-block cursor-pointer rounded-full border border-[var(--line)] px-3 py-1 hover:bg-white/40"
+                >
                   {m}
                 </AppLink>
               </li>
@@ -156,13 +165,20 @@ function Panel({
           <li key={k}>
             <AppLink
               href={href}
-              className="flex justify-between rounded-2xl bg-white/50 p-3 dark:bg-white/5 hover:bg-white/70"
+              className="flex cursor-pointer justify-between rounded-2xl bg-white/50 p-3 dark:bg-white/5 hover:bg-white/70"
             >
               <span className="opacity-60">{k}</span>
               <span>{String(v)}</span>
             </AppLink>
           </li>
         ))}
+        {!Object.keys(obj || {}).length && (
+          <li>
+            <AppLink href={href} className="block rounded-2xl bg-white/50 p-3 text-sea dark:bg-white/5">
+              Open module →
+            </AppLink>
+          </li>
+        )}
       </ul>
     </div>
   );

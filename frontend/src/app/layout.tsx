@@ -17,6 +17,10 @@ const body = Manrope({
 export const metadata: Metadata = {
   title: "AI Healthcare Assistant",
   description: "Enterprise agentic AI healthcare assistant for patients, doctors, and hospitals.",
+  icons: {
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

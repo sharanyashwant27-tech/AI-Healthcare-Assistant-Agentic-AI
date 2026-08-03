@@ -1,12 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import {
   createContext,
   useCallback,
   useContext,
   useMemo,
-  type ComponentProps,
+  type AnchorHTMLAttributes,
   type MouseEvent,
   type ReactNode,
 } from "react";
@@ -30,40 +29,51 @@ export function usePanelNavigate() {
   return useContext(PanelNavContext);
 }
 
-type AppLinkProps = Omit<ComponentProps<typeof Link>, "href"> & {
+type AppLinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
   href: string;
-  /** Optional task to run before/after navigation (e.g. trigger workflow). */
+  /** Optional task to run when the link is activated. */
   onNavigate?: () => void | Promise<void>;
 };
 
-/** Site-wide link that uses instant panel switching when available. */
-export function AppLink({ href, onClick, onNavigate, children, ...rest }: AppLinkProps) {
+/**
+ * Site-wide link that uses Shell panel navigation when available.
+ * Uses a plain <a> so Next.js Link soft-nav cannot swallow / ignore the click.
+ */
+export function AppLink({ href, onClick, onNavigate, children, className, ...rest }: AppLinkProps) {
   const navigate = usePanelNavigate();
 
   const handleClick = useCallback(
-    async (e: MouseEvent<HTMLAnchorElement>) => {
+    (e: MouseEvent<HTMLAnchorElement>) => {
       onClick?.(e);
       if (e.defaultPrevented) return;
-      if (onNavigate) {
-        try {
-          await onNavigate();
-        } catch {
-          /* allow navigation even if task fails */
-        }
-      }
-      if (navigate && isNavHref(href)) {
+
+      // Always take over same-origin app routes so cards respond immediately.
+      if (href.startsWith("/") && !href.startsWith("//")) {
         e.preventDefault();
-        void loadPanel(href);
-        navigate(href);
+        void (async () => {
+          if (onNavigate) {
+            try {
+              await onNavigate();
+            } catch {
+              /* still navigate */
+            }
+          }
+          if (navigate) {
+            if (isNavHref(href)) void loadPanel(href);
+            navigate(href);
+            return;
+          }
+          window.location.assign(href);
+        })();
       }
     },
     [href, navigate, onClick, onNavigate]
   );
 
   return (
-    <Link href={href} onClick={handleClick} {...rest}>
+    <a href={href} onClick={handleClick} className={className} {...rest}>
       {children}
-    </Link>
+    </a>
   );
 }
 
@@ -73,7 +83,7 @@ export function useAppNavigate() {
     () => ({
       go: (href: string) => {
         if (ctx) ctx(href);
-        else if (typeof window !== "undefined") window.location.href = href;
+        else if (typeof window !== "undefined") window.location.assign(href);
       },
     }),
     [ctx]

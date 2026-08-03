@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="AI Healthcare Assistant">
+  <defs>
+    <linearGradient id="bg" x1="8" y1="4" x2="56" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F6E7A"/>
+      <stop offset="1" stop-color="#0B1F2A"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="url(#bg)"/>
+  <path d="M28 14h8v14h14v8H36v14h-8V36H14v-8h14V14z" fill="#F7F3EE"/>
+  <path d="M14 48c4-6 9-9 18-9s14 3 18 9" fill="none" stroke="#3DB8C5" stroke-width="3" stroke-linecap="round"/>
+</svg>
