@@ -109,7 +109,10 @@ docker compose exec backend cat /app/IMAGE_INFO.txt
 
 ### Build images only
 
+Frontend packages a host-built Next.js standalone output (avoids Docker Desktop crashes during in-container `next build`):
+
 ```bash
+cd frontend && npm run build && cd ..
 docker compose build backend frontend
 # or
 docker build -f backend/Dockerfile -t aihc-backend:latest .

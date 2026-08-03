@@ -55,8 +55,8 @@ class DoctorRepository:
         )
         return result.scalar_one_or_none()
 
-    async def list(self, specialty: Optional[str] = None, limit: int = 50) -> List[Doctor]:
-        stmt = select(Doctor).options(selectinload(Doctor.user)).limit(limit)
+    async def list(self, specialty: Optional[str] = None, limit: int = 100) -> List[Doctor]:
+        stmt = select(Doctor).options(selectinload(Doctor.user)).order_by(Doctor.specialty).limit(limit)
         if specialty:
             stmt = stmt.where(Doctor.specialty.ilike(f"%{specialty}%"))
         result = await self.db.execute(stmt)

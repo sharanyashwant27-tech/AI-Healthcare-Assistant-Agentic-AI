@@ -1,30 +1,20 @@
-FROM node:22-alpine AS deps
-WORKDIR /app
-COPY frontend/package.json frontend/package-lock.json* ./
-RUN npm install
-
-FROM node:22-alpine AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY frontend/ .
-COPY README.md ./README.md
-ENV NEXT_TELEMETRY_DISABLED=1
-ENV NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
-ENV NEXT_PUBLIC_WS_URL=ws://localhost:8000/ws
-RUN npm run build
-
+# Mirror of frontend/Dockerfile — packages host-built Next.js standalone output.
 FROM node:22-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=8911
 ENV NEXT_TELEMETRY_DISABLED=1
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+
+COPY frontend/public ./public
+COPY frontend/.next/standalone ./
+COPY frontend/.next/static ./.next/static
 COPY README.md /app/README.md
+
 RUN printf '%s\n' \
       "AI Healthcare Assistant frontend image" \
       "Docs: /app/README.md" \
+      "UI: http://localhost:8911" \
       > /app/IMAGE_INFO.txt
+
 EXPOSE 8911
 CMD ["node", "server.js"]

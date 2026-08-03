@@ -4,7 +4,12 @@
 venv
 node_modules
 frontend/node_modules
-frontend/.next
+# Allow standalone artifacts for frontend image packaging (build on host first).
+frontend/.next/*
+!frontend/.next/standalone
+!frontend/.next/standalone/**
+!frontend/.next/static
+!frontend/.next/static/**
 **/__pycache__
 **/*.pyc
 .pytest_cache

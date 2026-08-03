@@ -9,8 +9,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Build from repo root: docker compose build (context: .)
 COPY backend/requirements.txt .
 ENV PIP_DEFAULT_TIMEOUT=120
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
-    && pip install --no-cache-dir --retries 10 -r requirements.txt
+# openai-whisper setup.py needs pkg_resources (setuptools<81) outside build isolation.
+# legacy-resolver avoids modern resolver dead-ends across crewai/langchain pins.
+RUN pip install --no-cache-dir --upgrade "pip" "setuptools>=70,<81" wheel \
+    && grep -v '^openai-whisper' requirements.txt > /tmp/requirements-core.txt \
+    && pip install --no-cache-dir --retries 10 --use-deprecated=legacy-resolver -r /tmp/requirements-core.txt \
+    && pip install --no-cache-dir --retries 10 --no-build-isolation "openai-whisper==20240930"
 
 COPY backend/ .
 COPY README.md /app/README.md
