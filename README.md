@@ -62,9 +62,19 @@ Specialty doctors (password `Doctor@12345` for all):
 | Urology | uro@example.com |
 | Dental | dental@example.com |
 
+## Specialists (book appointment)
+
+Open **http://localhost:8911/appointments** (sign in as patient).
+
+1. **Category** dropdown — Cardiology, Gastroenterology, ENT, and other specialties  
+2. **Doctor** dropdown — doctors filtered by the selected category  
+3. Choose date/time and reason, then **Book appointment**
+
+Booked visits appear under **Your appointments** on the same page.
+
 ## Docker (recommended)
 
-Docker images bake in this `README.md` (at `/app/README.md`) plus backend docs.
+Both `aihc-backend` and `aihc-frontend` images include this `README.md` at `/app/README.md` (backend also includes `/app/docs`). Compose mounts the repo README read-only onto running containers so docs stay current.
 
 ### Prerequisites
 
@@ -107,14 +117,22 @@ docker compose exec backend cat /app/README.md
 docker compose exec backend cat /app/IMAGE_INFO.txt
 ```
 
-### Build images only
+### Build / rebuild images only
 
-Frontend packages a host-built Next.js standalone output (avoids Docker Desktop crashes during in-container `next build`):
+Frontend packages a **host-built** Next.js standalone output (avoids Docker Desktop crashes during in-container `next build`). Rebuild whenever `README.md` or app code changes so the baked `/app/README.md` stays current:
 
 ```bash
+# from repo root
 cd frontend && npm run build && cd ..
 docker compose build backend frontend
-# or
+# verify README inside images
+docker run --rm aihc-backend:latest head -n 8 /app/README.md
+docker run --rm aihc-frontend:latest head -n 8 /app/README.md
+```
+
+Equivalent one-off builds:
+
+```bash
 docker build -f backend/Dockerfile -t aihc-backend:latest .
 docker build -f frontend/Dockerfile -t aihc-frontend:latest .
 ```
